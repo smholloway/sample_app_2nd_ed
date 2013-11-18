@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   before_filter :signed_in_user,
-                only: [:index, :edit, :update, :destroy, :following, :followers]
-  before_filter :correct_user,   only: [:edit, :update]
+                only: [:index, :edit, :update, :destroy, :following, :followers, :toopher_create_pairing, :toopher_delete_pairing]
+  before_filter :correct_user,   only: [:edit, :update, :toopher_create_pairing, :toopher_delete_pairing]
   before_filter :admin_user,     only: :destroy
 
   def index
@@ -61,7 +61,94 @@ class UsersController < ApplicationController
     render 'show_follow'
   end
 
+  def toopher_create_pairing
+    @user = User.find(params[:id])
+    pairing_phrase = params[:pairing_phrase]
+
+    begin
+      toopher = ToopherAPI.new(ENV['TOOPHER_CONSUMER_KEY'], ENV['TOOPHER_CONSUMER_SECRET'])
+    rescue
+      return toopher_setup_error
+    end
+
+    if not session[:toopher_pairing_start]
+      begin
+        pairing = toopher.pair(pairing_phrase, @user.email)
+      rescue => e
+        puts $!, $@
+        return toopher_bad_pairing_phrase
+      end
+      session[:toopher_pairing_start] = Time.now
+      session[:toopher_pairing_id] = pairing.id
+    else
+      pairing = toopher.get_pairing_status(session[:toopher_pairing_id])
+    end
+
+    if Time.now - session[:toopher_pairing_start] > 60
+      return pairing_timeout
+    end
+
+    if pairing and pairing.enabled
+      if @user.update_attribute(:toopher_pairing_id, session[:toopher_pairing_id])
+        sign_in @user
+        return toopher_pairing_enabled
+      end
+    end
+
+    render :json => {:pairing_id => session[:toopher_pairing_id]}
+  end
+
+  def toopher_delete_pairing
+    @user = User.find(params[:id])
+    if @user.update_attribute(:toopher_pairing_id, "")
+      sign_in @user
+      toopher_pairing_disabled
+    else
+      toopher_pairing_disabled_failed
+    end
+  end
+
   private
+
+    def toopher_pairing_disabled
+      clear_toopher_session_data
+      flash[:success] = "Toopher removed from this account."
+      redirect_to edit_user_path(@user)
+    end
+
+    def toopher_pairing_disabled_failed
+      flash[:success] = "We could not remove Toopher from this account."
+      redirect_to edit_user_path(@user)
+    end
+
+    def toopher_pairing_enabled
+      clear_toopher_session_data
+      flash[:success] = "Toopher now active for this account."
+      render :json => {:redirect => edit_user_path(@user)}
+    end
+
+    def pairing_timeout
+      clear_toopher_session_data
+      flash[:failure] = "Pairing timed out. Please try again."
+      render :json => {:redirect => edit_user_path(@user)}
+    end
+
+    def toopher_bad_pairing_phrase
+      clear_toopher_session_data
+      flash[:failure] = "Incorrect pairing phrase. Please ensure you typed the pairing phrase correctly."
+      render :json => {:redirect => edit_user_path(@user)}
+    end
+
+    def toopher_setup_error
+      clear_toopher_session_data
+      flash[:failure] = 'Toopher is not configured properly. Please contact an administrator.'
+      render :json => {:redirect => signin_path}
+    end
+
+    def clear_toopher_session_data
+      session.delete(:toopher_pairing_start)
+      session.delete(:toopher_pairing_id)
+    end
 
     def correct_user
       @user = User.find(params[:id])

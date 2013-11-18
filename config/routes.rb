@@ -1,7 +1,10 @@
 SampleApp::Application.routes.draw do
+  resources :toopher_terminals, only: [:new, :create]
+
   resources :users do
     member do
       get :following, :followers
+      post :toopher_create_pairing, :toopher_delete_pairing
     end
   end
   resources :sessions, only: [:new, :create, :destroy]
