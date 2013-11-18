@@ -1,36 +1,36 @@
-$(document).ready(function(){
+$(document).ready(function() {
   /* Constants */
-  var TOOPHER_TIMEOUT = 90; // seconds
+  var TOOPHER_TIMEOUT = 90000; // milliseconds
+  var POLLING_INTERVAL = 2000; // milliseconds
 
   /* Utility methods */
   var startLoadingAnimation = function(headerMessage, bodyMessage) {
-    if ($(".blockUI").length == 0) {
+    if ($(".blockUI").length === 0) {
       headerMessage = headerMessage || "Loading";
       bodyMessage = bodyMessage || "Please check your mobile device.";
-      $.blockUI({ message: 
-        '<h3>' + headerMessage + ' <img src="/assets/loading.gif" /></h3> \
-        <hr/><p>' + bodyMessage + '</p>' });
+      $.blockUI({message: '<h3>' + headerMessage + ' <img src="/assets/loading.gif" /></h3>' +
+        '<hr/><p>' + bodyMessage + '</p>'});
     }
-  }
+  };
 
   /* Authenticating */
   $("#sign_in").submit(function(e) {
     e.preventDefault();
     pollAuthenticating(Date.now(), TOOPHER_TIMEOUT);
-  })
+  });
 
   var startAuthenticating = function() {
     startLoadingAnimation('Authenticating with Toopher');
-  }
+  };
 
   var stopAuthenticating = function() {
-    $.unblockUI()
+    $.unblockUI();
     window.location.href = '/';
-  }
+  };
 
-  var pollAuthenticating = function(start_time, timeout_in_seconds) {
+  var pollAuthenticating = function(start_time, timeout) {
     var elapsed_time = Date.now() - start_time;
-    if (elapsed_time > timeout_in_seconds*1000) {
+    if (elapsed_time > timeout) {
       stopAuthenticating();
     }
 
@@ -49,20 +49,20 @@ $(document).ready(function(){
           $.post('/toopher_terminals',
             $('#sign_in').serialize(),
             function(data) {
-              setTimeout(function(){ pollAuthenticating(start_time, timeout_in_seconds); }, 2000);
+              setTimeout(function(){ pollAuthenticating(start_time, timeout); }, POLLING_INTERVAL);
             }).error(function() {
               stopAuthenticating();
             }
           );
         } else {
           startAuthenticating();
-          setTimeout(function(){ pollAuthenticating(start_time, timeout_in_seconds); }, 2000);
+          setTimeout(function(){ pollAuthenticating(start_time, timeout); }, POLLING_INTERVAL);
         }
       }).error(function() {
         stopAuthenticating();
       }
     );
-  }
+  };
 
   /* Pairing */
   $('#unpair').submit(function(e) {
@@ -79,16 +79,16 @@ $(document).ready(function(){
   
   var startPairing = function() {
     startLoadingAnimation('Pairing with Toopher');
-  }
+  };
 
   var stopPairing = function() {
-    $.unblockUI()
+    $.unblockUI();
     window.location.href = '/';
-  }
+  };
 
-  var pollPairing = function(start_time, timeout_in_seconds) {
+  var pollPairing = function(start_time, timeout) {
     var elapsed_time = Date.now() - start_time;
-    if (elapsed_time > timeout_in_seconds*1000) {
+    if (elapsed_time > timeout) {
       stopPairing();
     }
 
@@ -99,11 +99,11 @@ $(document).ready(function(){
           window.location.href = data.redirect;
         } else {
           startPairing();
-          setTimeout(function(){ pollPairing(start_time, timeout_in_seconds); }, 2000);
+          setTimeout(function(){ pollPairing(start_time, timeout); }, POLLING_INTERVAL);
         }
       }).error(function() {
         stopPairing();
       }
     );
-  }
+  };
 });
