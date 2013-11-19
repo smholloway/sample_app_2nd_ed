@@ -1,16 +1,37 @@
-# Ruby on Rails Tutorial: sample application
+# Ruby on Rails Tutorial: sample application with Toopher
 
-This is the sample application for
+This is a sample application from 
 [*Ruby on Rails Tutorial: Learn Web Development with Rails*](http://railstutorial.org/)
-by [Michael Hartl](http://michaelhartl.com/). You can use this reference implementation to help track down errors if you end up having trouble with code in the tutorial. In particular, as a first debugging check I suggest getting the test suite to pass on your local machine:
+by [Michael Hartl](http://michaelhartl.com/). It has been augmented to
+include Toopher for two-factor authentication.
 
-    $ cd /tmp
-    $ git clone git@github.com:railstutorial/sample_app_2nd_ed.git
-    $ cd sample_app_2nd_ed
-    $ cp config/database.yml.example config/database.yml
-    $ bundle install
-    $ bundle exec rake db:migrate
-    $ bundle exec rake db:test:prepare
-    $ bundle exec rspec spec/
+This is only an example provided as a reference.
 
-If the tests don't pass, it means there may be something wrong with your system. If they do pass, then you can debug your code by comparing it with the reference implementation.
+## Setup
+
+To get running, clone the repo, set up the database, and fire it up.
+
+    git clone git@github.com:smholloway/sample_app_2nd_ed_with_toopher.git
+    cp config/database.yml.example config/database.yml
+    bundle install
+    bundle exec rake db:migrate
+    rails server
+
+## The Toopher bits
+To see Toopher in action, create an account, then navigate to the user
+settings page. You should see a section for Toopher, which you enable by
+pairing. After successfully pairing, log out, then log back in.
+
+Curious about the changes necessary to integrate Toopher? See the [pull
+request](https://github.com/smholloway/sample_app_2nd_ed_with_toopher/pull/1)
+that made it happen.
+
+## Notes
+
+* The login flow changed but the tests were not updated, so they are failing.
+* In this example the UI is merely workable--please use your imagination for how a
+  professional designer would craft modals and input forms.
+* There is no easy way to reset Toopher when locked out. In a real implementation, 
+consider allowing users to reset Toopher like they reset a forgotten password; 
+for example, using a security question or email reset.
+
