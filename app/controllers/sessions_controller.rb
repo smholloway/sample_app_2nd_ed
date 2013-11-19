@@ -17,7 +17,11 @@ class SessionsController < ApplicationController
   end
 
   def toopher_auth(user=nil)
-    toopher = ToopherAPI.new(ENV['TOOPHER_CONSUMER_KEY'], ENV['TOOPHER_CONSUMER_SECRET']) rescue nil
+    begin
+      toopher = ToopherAPI.new(ENV['TOOPHER_CONSUMER_KEY'], ENV['TOOPHER_CONSUMER_SECRET'])
+    rescue
+      return toopher_setup_error
+    end
 
     terminal_name = user.toopher_terminals.where(:cookie_value => cookies[:toopher]).first.terminal_name rescue nil
     if terminal_name.nil?
@@ -27,8 +31,9 @@ class SessionsController < ApplicationController
     if not session[:toopher_auth_start] # we have a request pending
       begin
         auth_status = toopher.authenticate(user.toopher_pairing_id, terminal_name, 'login', { terminal_name_extra: cookies[:toopher] })
-      rescue
-        return fail_login
+      rescue => e
+        puts $!, $@
+        return toopher_authentication_error
       end
       session[:toopher_auth_start] = Time.now
       session[:toopher_auth_id] = auth_status.id
@@ -44,7 +49,7 @@ class SessionsController < ApplicationController
       if auth_status.granted
         return pass_login(user)
       else
-        return fail_login
+        return toopher_deny
       end
     end
 
@@ -68,6 +73,24 @@ class SessionsController < ApplicationController
   def fail_login
     clear_toopher_session_data
     flash[:failure] = 'Invalid email/password combination.'
+    render :json => {:redirect => signin_path}
+  end
+
+  def toopher_setup_error
+    clear_toopher_session_data
+    flash[:failure] = 'Toopher is not configured properly. Please contact an administrator.'
+    render :json => {:redirect => signin_path}
+  end
+
+  def toopher_authentication_error
+    clear_toopher_session_data
+    flash[:failure] = 'There was an error. Please try again.'
+    render :json => {:redirect => signin_path}
+  end
+
+  def toopher_deny
+    clear_toopher_session_data
+    flash[:failure] = 'Login request was denied.'
     render :json => {:redirect => signin_path}
   end
 
