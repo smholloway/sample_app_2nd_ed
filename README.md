@@ -2,7 +2,8 @@
 
 This is a sample application from 
 [*Ruby on Rails Tutorial: Learn Web Development with Rails*](http://railstutorial.org/)
-by [Michael Hartl](http://michaelhartl.com/). It has been augmented to
+by [Michael Hartl](http://michaelhartl.com/) (specifically, the
+[railstutorial/sample_app_2nd_ed](https://github.com/railstutorial/sample_app_2nd_ed)). It has been augmented to
 include Toopher for two-factor authentication.
 
 This is only an example provided as a reference.
