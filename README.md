@@ -10,13 +10,23 @@ This is only an example provided as a reference.
 
 ## Setup
 
-To get running, clone the repo, set up the database, and fire it up.
+Getting the sample app running locally is similar to starting any Rails
+project: clone the repo, install your gems, and migrate your database.
+One additional step is to configure Toopher. In this     example, the
+Toopher client is instantiated using API credentials stored in the
+environment (`toopher = ToopherAPI.new(ENV['TOOPHER_CONSUMER_KEY'],
+ENV['TOOPHER_CONSUMER_SECRET'])`), so you need to   set
+`TOOPHER_CONSUMER_KEY` and `TOOPHER_CONSUMER_SECRET`.
 
-    git clone git@github.com:smholloway/sample_app_2nd_ed_with_toopher.git
-    cp config/database.yml.example config/database.yml
-    bundle install
-    bundle exec rake db:migrate
-    rails server
+``` sh
+git clone git@github.com:smholloway/sample_app_2nd_ed_with_toopher.git
+cp config/database.yml.example config/database.yml
+bundle install
+bundle exec rake db:migrate
+export TOOPHER_CONSUMER_KEY=xxx
+export TOOPHER_CONSUMER_SECRET=xxx
+rails server
+```
 
 ## The Toopher bits
 To see Toopher in action, create an account, then navigate to the user
